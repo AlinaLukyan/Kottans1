@@ -11,17 +11,25 @@ input.addEventListener('keydown', (e) => {
 });
 
 
-function get(url, callback) {
+function get(url, resolve, reject) {
     let xhr = new XMLHttpRequest();
 
     xhr.onreadystatechange = () => {
         if (xhr.status === 200 && xhr.readyState === 4) {
-            callback(JSON.parse(xhr.responseText));
+            resolve(JSON.parse(xhr.responseText));
         }
+    };
+
+    xhr.onerror = (e) => {
+        reject(e);
     };
 
     xhr.open('GET', url, true);
     xhr.send();
+}
+
+function onError(e) {
+    throw new Error(e.message);
 }
 
 function addReply() {
@@ -87,6 +95,8 @@ get('/photos', (response) => {
 
         get('https://randomuser.me/api/?results=32', (response) => {
             drawFriends(response.results);
-        });
-    });
-});
+        }, onError);
+
+    }, onError);
+
+}, onError);
