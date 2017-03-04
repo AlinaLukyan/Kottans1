@@ -1,15 +1,7 @@
 'use strict';
 
-var xhr = new XMLHttpRequest();
-const gallery = document.getElementById('gallery');
-const avatar = document.querySelector('.avatar');
-const name = document.querySelector('.name');
-const phone = document.querySelector('.phone');
-const email = document.querySelector('.email');
-const friends = document.getElementById('friends');
-const sendButton = document.querySelector('button');
 const input = document.querySelector('input');
-const replies = document.querySelector('.replies');
+const sendButton = document.querySelector('button');
 
 
 sendButton.addEventListener('click', addReply);
@@ -18,7 +10,23 @@ input.addEventListener('keydown', (e) => {
     if (e.which == 13) addReply();
 });
 
+
+function get(url, callback) {
+    let xhr = new XMLHttpRequest();
+
+    xhr.onreadystatechange = () => {
+        if (xhr.status === 200 && xhr.readyState === 4) {
+            callback(JSON.parse(xhr.responseText));
+        }
+    };
+
+    xhr.open('GET', url, true);
+    xhr.send();
+}
+
 function addReply() {
+    const replies = document.querySelector('.replies');
+
     let text = input.value.trim();
 
     if (!text.length) return;
@@ -30,32 +38,9 @@ function addReply() {
     input.value = null;
 }
 
-function get(url, callback) {
-    let xhr = new XMLHttpRequest();
-
-    xhr.onreadystatechange = () => {
-        if (xhr.status === 200 && xhr.readyState === 4) {
-            callback(JSON.parse(xhr.responseText));
-        }
-    };
-    xhr.open('GET', url, true);
-    xhr.send();
-}
-
-get('/photos', (response) => {
-    drawPhotos(response);
-
-    get('https://randomuser.me/api/', (response) => {
-        drawProfileInfo(response.results[0]);
-
-        get('https://randomuser.me/api/?results=32', (response) => {
-            drawFriends(response.results);
-        });
-    });
-});
-
-
 function drawPhotos(photos) {
+    const gallery = document.getElementById('gallery');
+
     photos.forEach(photo => {
         let div = document.createElement('div'),
             img = document.createElement('img');
@@ -69,6 +54,11 @@ function drawPhotos(photos) {
 }
 
 function drawProfileInfo(profile) {
+    const avatar = document.querySelector('.avatar');
+    const name = document.querySelector('.name');
+    const phone = document.querySelector('.phone');
+    const email = document.querySelector('.email');
+
     avatar.src = profile.picture.large;
     name.innerText = `${profile.name.first} ${profile.name.last}`;
     phone.textContent = profile.cell;
@@ -76,6 +66,8 @@ function drawProfileInfo(profile) {
 }
 
 function drawFriends(users) {
+    const friends = document.getElementById('friends');
+
     users.forEach(friend => {
         let div = document.createElement('div'),
             img = document.createElement('img');
@@ -86,3 +78,15 @@ function drawFriends(users) {
         friends.appendChild(div);
     });
 }
+
+get('/photos', (response) => {
+    drawPhotos(response);
+
+    get('https://randomuser.me/api/', (response) => {
+        drawProfileInfo(response.results[0]);
+
+        get('https://randomuser.me/api/?results=32', (response) => {
+            drawFriends(response.results);
+        });
+    });
+});
